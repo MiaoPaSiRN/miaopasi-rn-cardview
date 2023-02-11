@@ -5,7 +5,7 @@
 
 @implementation MiaopasiRnCardviewViewManager
 
-RCT_EXPORT_MODULE(MiaopasiRnCardviewView)
+RCT_EXPORT_MODULE(MiaopasiRnCard)
 
 - (UIView *)view
 {

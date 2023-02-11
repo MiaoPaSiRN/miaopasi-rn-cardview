@@ -10,7 +10,7 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
 public class MiaopasiRnCardviewViewManager extends SimpleViewManager<View> {
-  public static final String REACT_CLASS = "MiaopasiRnCardviewView";
+  public static final String REACT_CLASS = "MiaopasiRnCard";
 
   @Override
   @NonNull

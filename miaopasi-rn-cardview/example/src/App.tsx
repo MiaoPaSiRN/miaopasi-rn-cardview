@@ -1,12 +1,17 @@
 import * as React from 'react';
 
-import { StyleSheet, View } from 'react-native';
-import { MiaopasiRnCardviewView } from 'miaopasi-rn-cardview';
+import { StyleSheet, View, Text } from 'react-native';
+import { MiaopasiRnCard } from 'miaopasi-rn-cardview';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <MiaopasiRnCardviewView color="#32a852" style={styles.box} />
+      <MiaopasiRnCard color="#32a852" style={styles.box}>
+        <Text>哈哈哈</Text>
+        <Text>哈哈哈</Text>
+        <Text>哈哈哈</Text>
+        <Text>哈哈哈</Text>
+      </MiaopasiRnCard>
     </View>
   );
 }
@@ -18,8 +23,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    width: 60,
-    height: 60,
+    // width: 60,
+    // height: 60,
     marginVertical: 20,
+    padding: 20,
+    borderRadius: 10,
   },
 });

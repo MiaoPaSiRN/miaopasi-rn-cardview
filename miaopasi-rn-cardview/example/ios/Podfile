@@ -20,7 +20,9 @@ if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
 end
-
+# Pod出错--Could not automatically select an Xcode project
+# 在pofile中添加一句话: project '你工程的名字.xcodeproj'
+project 'MiaopasiRnCardviewExample.xcodeproj'
 target 'MiaopasiRnCardviewExample' do
   config = use_native_modules!
 

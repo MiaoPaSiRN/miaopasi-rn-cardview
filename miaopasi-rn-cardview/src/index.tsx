@@ -11,16 +11,17 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-type MiaopasiRnCardviewProps = {
-  color: string;
-  style: ViewStyle;
+type MiaopasiRnCardProps = {
+  color?: string;
+  style?: ViewStyle;
+  children?: React.ReactNode;
 };
 
-const ComponentName = 'MiaopasiRnCardviewView';
+const ComponentName = 'MiaopasiRnCard';
 
-export const MiaopasiRnCardviewView =
+export const MiaopasiRnCard =
   UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<MiaopasiRnCardviewProps>(ComponentName)
+    ? requireNativeComponent<MiaopasiRnCardProps>(ComponentName)
     : () => {
         throw new Error(LINKING_ERROR);
       };
