@@ -15,6 +15,9 @@ type MiaopasiRnCardProps = {
   color?: string;
   style?: ViewStyle;
   children?: React.ReactNode;
+  zoomEnabled?: boolean;
+  region?: any;
+  onRegionChange?: (info: any) => void;
 };
 
 const ComponentName = 'MiaopasiRnCard';

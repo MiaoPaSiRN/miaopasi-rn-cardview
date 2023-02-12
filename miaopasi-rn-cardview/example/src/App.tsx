@@ -1,17 +1,44 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Button } from 'react-native';
 import { MiaopasiRnCard } from 'miaopasi-rn-cardview';
 
 export default function App() {
+  var region = {
+    latitude: 37.48,
+    longitude: -122.16,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  };
+  const onRegionChange = (event: any) => {
+    // Do stuff with event.region.latitude, etc.
+    console.log('onRegionChange: ', event);
+  };
+
   return (
     <View style={styles.container}>
-      <MiaopasiRnCard color="#32a852" style={styles.box}>
-        <Text>哈哈哈</Text>
-        <Text>哈哈哈</Text>
-        <Text>哈哈哈</Text>
-        <Text>哈哈哈</Text>
+      <MiaopasiRnCard
+        color="#32a852"
+        style={styles.box}
+        region={region}
+        onRegionChange={onRegionChange}
+      >
+        <Text>地图1</Text>
       </MiaopasiRnCard>
+      <MiaopasiRnCard
+        color="#32a852"
+        style={styles.box}
+        region={region}
+        onRegionChange={onRegionChange}
+      >
+        <Text>地图2</Text>
+      </MiaopasiRnCard>
+      <Button
+        title="点击修改地图1"
+        onPress={() => {
+          // this.myNativeReference.callNativeMethod();
+        }}
+      />
     </View>
   );
 }
@@ -23,10 +50,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    // width: 60,
-    // height: 60,
-    marginVertical: 20,
-    padding: 20,
-    borderRadius: 10,
+    width: '100%',
+    height: 200,
   },
 });
