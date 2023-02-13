@@ -6,6 +6,7 @@ import {
   UIManager,
   ViewProps,
   findNodeHandle,
+  Platform,
 } from 'react-native';
 
 import type {
@@ -16,6 +17,14 @@ import type {
   PanDragEvent,
   Region,
 } from './sharedTypes';
+
+const ComponentName = 'MiaopasiRnCard';
+
+const LINKING_ERROR =
+  `The package 'miaopasi-rn-cardview' doesn't seem to be linked. Make sure: \n\n` +
+  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
+  '- You rebuilt the app after installing the package\n' +
+  '- You are not using Expo Go\n';
 
 export type MiaopasiRnMapViewProps = ViewProps & {
   initialRegion?: Region | undefined | null;
@@ -45,7 +54,7 @@ export type NativeProps = Omit<
 };
 
 const MiaopasiRnCard =
-  requireNativeComponent<MiaopasiRnMapViewProps>('MiaopasiRnCard');
+  requireNativeComponent<MiaopasiRnMapViewProps>(ComponentName);
 
 /// 这里参数类型应该为：MiaopasiRnMapViewProps
 export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
@@ -58,8 +67,7 @@ export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
   animateToRegion(region: Region, duration: number = 500) {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
-      UIManager.getViewManagerConfig('MiaopasiRnCard').Commands
-        .animateToRegion!,
+      UIManager.getViewManagerConfig(ComponentName).Commands.animateToRegion!,
       [region, duration]
     );
   }
