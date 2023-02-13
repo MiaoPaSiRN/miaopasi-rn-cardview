@@ -47,6 +47,7 @@ export type NativeProps = Omit<
 const MiaopasiRnCard =
   requireNativeComponent<MiaopasiRnMapViewProps>('MiaopasiRnCard');
 
+/// 这里参数类型应该为：MiaopasiRnMapViewProps
 export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
   viewRef?: React.ElementRef<typeof MiaopasiRnCard>;
 
@@ -80,10 +81,9 @@ export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
   };
 
   render() {
+    /// 这里参数类型应该为: NativeProps
     let props: NativeProps;
     props = {
-      region: null,
-      initialRegion: null,
       onChange: this._onChange,
       onMapReady: this._onMapReady,
       ...this.props,
