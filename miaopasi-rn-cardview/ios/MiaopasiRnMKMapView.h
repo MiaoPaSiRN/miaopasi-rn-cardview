@@ -9,9 +9,26 @@
 #import <React/RCTComponent.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MiaopasiRnMKMapView : MKMapView
+extern const CLLocationDegrees MiaopasiRnMapDefaultSpan;
+extern const NSTimeInterval MiaopasiRnMapRegionChangeObserveInterval;
+extern const CGFloat MiaopasiRnMapZoomBoundBuffer;
+extern const NSInteger MiaopasiRnMapMaxZoomLevel;
 
+
+@interface MiaopasiRnMKMapView : MKMapView
+@property (nonatomic, assign) BOOL hasStartedRendering;
+@property (nonatomic, assign) CGFloat minDelta;
+@property (nonatomic, assign) CGFloat maxDelta;
+@property (nonatomic, assign) MKCoordinateRegion initialRegion;
+
+@property (nonatomic, assign) BOOL ignoreRegionChanges;
+@property (nonatomic, copy) RCTBubblingEventBlock onMapReady;
 @property (nonatomic, copy) RCTBubblingEventBlock onRegionChange;
+@property (nonatomic, copy) RCTBubblingEventBlock onRegionChangeComplete;
+@property (nonatomic, copy) RCTBubblingEventBlock onPress;
+@property (nonatomic, copy) RCTBubblingEventBlock onPanDrag;
+@property (nonatomic, copy) RCTBubblingEventBlock onDoublePress;
+@property (nonatomic, copy) RCTBubblingEventBlock onLongPress;
 
 @end
 

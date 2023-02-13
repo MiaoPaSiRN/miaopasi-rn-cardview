@@ -1,42 +1,58 @@
 import * as React from 'react';
-
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { MiaopasiRnCard } from 'miaopasi-rn-cardview';
+import MiaopasiRnMapView, { Region } from 'miaopasi-rn-cardview';
 
 export default function App() {
+  var mapRef: MiaopasiRnMapView | null;
+  const initialRegion = {
+    latitude: 31.18573,
+    longitude: 121.60698,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  };
   var region = {
     latitude: 37.48,
     longitude: -122.16,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   };
-  const onRegionChange = (event: any) => {
+  const onRegionChange = (region: Region) => {
     // Do stuff with event.region.latitude, etc.
-    console.log('onRegionChange: ', event);
+    console.log('onRegionChange: ', region);
   };
 
   return (
     <View style={styles.container}>
-      <MiaopasiRnCard
-        color="#32a852"
+      <MiaopasiRnMapView
+        ref={(ref) => (mapRef = ref)}
         style={styles.box}
+        initialRegion={initialRegion}
         region={region}
         onRegionChange={onRegionChange}
       >
         <Text>地图1</Text>
-      </MiaopasiRnCard>
-      <MiaopasiRnCard
-        color="#32a852"
+      </MiaopasiRnMapView>
+      <MiaopasiRnMapView
         style={styles.box}
+        initialRegion={initialRegion}
         region={region}
         onRegionChange={onRegionChange}
       >
         <Text>地图2</Text>
-      </MiaopasiRnCard>
+      </MiaopasiRnMapView>
       <Button
         title="点击修改地图1"
         onPress={() => {
           // this.myNativeReference.callNativeMethod();
+          mapRef?.animateToRegion(
+            {
+              latitude: 37.48,
+              longitude: -122.16,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
+            },
+            10
+          );
         }}
       />
     </View>

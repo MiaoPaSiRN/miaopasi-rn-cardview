@@ -1,7 +1,9 @@
 
 #import <MapKit/MapKit.h>
-#import <React/RCTConvert.h>
 #import <CoreLocation/CoreLocation.h>
+#import <React/RCTBridge.h>
+#import <React/RCTUIManager.h>
+#import <React/RCTConvert.h>
 #import <React/RCTConvert+CoreLocation.h>
 #import <React/RCTViewManager.h>
 #import "MiaopasiRnMKMapView.h"
@@ -35,9 +37,10 @@
 @end
 
 
+@interface MiaopasiRnCardviewViewManager : RCTViewManager<MKMapViewDelegate,UIGestureRecognizerDelegate>
 
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer;
 
-@interface MiaopasiRnCardviewViewManager : RCTViewManager<MKMapViewDelegate>
 @end
 
 @implementation MiaopasiRnCardviewViewManager
@@ -48,54 +51,268 @@ RCT_EXPORT_MODULE(MiaopasiRnCard)
 {
     MiaopasiRnMKMapView *map = [MiaopasiRnMKMapView new];
     map.delegate = self;
+    map.isAccessibilityElement = NO;
+    map.accessibilityElementsHidden = NO;
+    
+    // MKMapView doesn't report tap events, so we attach gesture recognizers to it
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleMapTap:)];
+    UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleMapDoubleTap:)];
+    [doubleTap setNumberOfTapsRequired:2];
+    [tap requireGestureRecognizerToFail:doubleTap];
+    
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleMapLongPress:)];
+    UIPanGestureRecognizer *drag = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleMapDrag:)];
+    [drag setMinimumNumberOfTouches:1];
+    // setting this to NO allows the parent MapView to continue receiving marker selection events
+    tap.cancelsTouchesInView = NO;
+    doubleTap.cancelsTouchesInView = NO;
+    longPress.cancelsTouchesInView = NO;
+    
+    doubleTap.delegate = self;
+    
+    // disable drag by default
+    drag.enabled = NO;
+    drag.delegate = self;
+  
+    [map addGestureRecognizer:tap];
+    [map addGestureRecognizer:doubleTap];
+    [map addGestureRecognizer:longPress];
+    [map addGestureRecognizer:drag];
+
+    
     return map;
 }
 
 RCT_EXPORT_VIEW_PROPERTY(zoomEnabled, BOOL)
-
+RCT_EXPORT_VIEW_PROPERTY(maxDelta, CGFloat)
+RCT_EXPORT_VIEW_PROPERTY(minDelta, CGFloat)
+RCT_EXPORT_VIEW_PROPERTY(onMapReady, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRegionChange, RCTBubblingEventBlock)
-
-RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
+RCT_EXPORT_VIEW_PROPERTY(onRegionChangeComplete, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onPanDrag, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onLongPress, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDoublePress, RCTBubblingEventBlock)
+RCT_CUSTOM_VIEW_PROPERTY(initialRegion, MKCoordinateRegion, MiaopasiRnMKMapView)
 {
-  [view setRegion:json ? [RCTConvert MKCoordinateRegion:json] : defaultView.region animated:YES];
+    if (json == nil) return;
+
+    // don't emit region change events when we are setting the initialRegion
+    BOOL originalIgnore = view.ignoreRegionChanges;
+    view.ignoreRegionChanges = YES;
+    [view setInitialRegion:[RCTConvert MKCoordinateRegion:json]];
+    view.ignoreRegionChanges = originalIgnore;
+}
+RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MiaopasiRnMKMapView)
+{
+    if (json == nil) return;
+
+    // don't emit region change events when we are setting the region
+    BOOL originalIgnore = view.ignoreRegionChanges;
+    view.ignoreRegionChanges = YES;
+    [view setRegion:[RCTConvert MKCoordinateRegion:json] animated:NO];
+    view.ignoreRegionChanges = originalIgnore;
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(color, NSString, MKMapView)
-{
-  [view setBackgroundColor:[self hexStringToColor:json]];
+#pragma mark Gesture Recognizer Handlers
+- (void)handleMapTap:(UITapGestureRecognizer *)recognizer {
+    MiaopasiRnMKMapView *map = (MiaopasiRnMKMapView *)recognizer.view;
+
+    CGPoint tapPoint = [recognizer locationInView:map];
+    CLLocationCoordinate2D tapCoordinate = [map convertPoint:tapPoint toCoordinateFromView:map];
+    MKMapPoint mapPoint = MKMapPointForCoordinate(tapCoordinate);
+    CGPoint mapPointAsCGP = CGPointMake(mapPoint.x, mapPoint.y);
+
+    if (!map.onPress) return;
+    map.onPress(@{
+            @"coordinate": @{
+                    @"latitude": @(tapCoordinate.latitude),
+                    @"longitude": @(tapCoordinate.longitude),
+            },
+            @"position": @{
+                    @"x": @(tapPoint.x),
+                    @"y": @(tapPoint.y),
+            },
+    });
+
 }
 
-- hexStringToColor:(NSString *)stringToConvert
-{
-  NSString *noHashString = [stringToConvert stringByReplacingOccurrencesOfString:@"#" withString:@""];
-  NSScanner *stringScanner = [NSScanner scannerWithString:noHashString];
+- (void)handleMapDrag:(UIPanGestureRecognizer*)recognizer {
+    MiaopasiRnMKMapView *map = (MiaopasiRnMKMapView *)recognizer.view;
+    if (!map.onPanDrag) return;
 
-  unsigned hex;
-  if (![stringScanner scanHexInt:&hex]) return nil;
-  int r = (hex >> 16) & 0xFF;
-  int g = (hex >> 8) & 0xFF;
-  int b = (hex) & 0xFF;
+    CGPoint touchPoint = [recognizer locationInView:map];
+    CLLocationCoordinate2D coord = [map convertPoint:touchPoint toCoordinateFromView:map];
+    map.onPanDrag(@{
+                  @"coordinate": @{
+                          @"latitude": @(coord.latitude),
+                          @"longitude": @(coord.longitude),
+                          },
+                  @"position": @{
+                          @"x": @(touchPoint.x),
+                          @"y": @(touchPoint.y),
+                          },
+                  });
 
-  return [UIColor colorWithRed:r / 255.0f green:g / 255.0f blue:b / 255.0f alpha:1.0f];
+}
+
+- (void)handleMapDoubleTap:(UIPanGestureRecognizer*)recognizer {
+    MiaopasiRnMKMapView *map = (MiaopasiRnMKMapView *)recognizer.view;
+    if (!map.onDoublePress) return;
+    
+    CGPoint touchPoint = [recognizer locationInView:map];
+    CLLocationCoordinate2D coord = [map convertPoint:touchPoint toCoordinateFromView:map];
+    map.onDoublePress(@{
+                    @"coordinate": @{
+                            @"latitude": @(coord.latitude),
+                            @"longitude": @(coord.longitude),
+                            },
+                    @"position": @{
+                            @"x": @(touchPoint.x),
+                            @"y": @(touchPoint.y),
+                            },
+                    });
+    
 }
 
 
-#pragma mark MKMapViewDelegate
+- (void)handleMapLongPress:(UITapGestureRecognizer *)recognizer {
+
+    // NOTE: android only does the equivalent of "began", so we only send in this case
+    if (recognizer.state != UIGestureRecognizerStateBegan) return;
+
+    MiaopasiRnMKMapView *map = (MiaopasiRnMKMapView *)recognizer.view;
+    if (!map.onLongPress) return;
+
+    CGPoint touchPoint = [recognizer locationInView:map];
+    CLLocationCoordinate2D coord = [map convertPoint:touchPoint toCoordinateFromView:map];
+
+    map.onLongPress(@{
+            @"coordinate": @{
+                    @"latitude": @(coord.latitude),
+                    @"longitude": @(coord.longitude),
+            },
+            @"position": @{
+                    @"x": @(touchPoint.x),
+                    @"y": @(touchPoint.y),
+            },
+    });
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
+}
+
+#pragma mark - MKMapViewDelegate
+- (void)mapViewWillStartRenderingMap:(MiaopasiRnMKMapView *)mapView
+{
+    if (!mapView.hasStartedRendering) {
+        if(mapView.onMapReady) mapView.onMapReady(@{});
+        mapView.hasStartedRendering = YES;
+    }
+}
+
+- (void)mapViewDidChangeVisibleRegion:(MiaopasiRnMKMapView *)mapView {
+    [self _regionChanged:mapView];
+}
 
 - (void)mapView:(MiaopasiRnMKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
 {
-  if (!mapView.onRegionChange) {
-    return;
-  }
-
-  MKCoordinateRegion region = mapView.region;
-  mapView.onRegionChange(@{
-    @"region": @{
-      @"latitude": @(region.center.latitude),
-      @"longitude": @(region.center.longitude),
-      @"latitudeDelta": @(region.span.latitudeDelta),
-      @"longitudeDelta": @(region.span.longitudeDelta),
+    // Don't send region did change events until map has
+    // started rendering, as these won't represent the final location
+    if(mapView.hasStartedRendering){
+        [self _regionChanged:mapView];
     }
-  });
+
+    // Don't send region did change events until map has
+    // started rendering, as these won't represent the final location
+    if (mapView.hasStartedRendering) {
+        [self _emitRegionChangeEvent:mapView continuous:NO];
+    };
+
+}
+
+#pragma mark Private
+
+- (void)_regionChanged:(MiaopasiRnMKMapView *)mapView
+{
+    BOOL needZoom = NO;
+    CGFloat newLongitudeDelta = 0.0f;
+    MKCoordinateRegion region = mapView.region;
+    // On iOS 7, it's possible that we observe invalid locations during initialization of the map.
+    // Filter those out.
+    if (!CLLocationCoordinate2DIsValid(region.center)) {
+        return;
+    }
+    // Calculation on float is not 100% accurate. If user zoom to max/min and then move, it's likely the map will auto zoom to max/min from time to time.
+    // So let's try to make map zoom back to 99% max or 101% min so that there are some buffer that moving the map won't constantly hitting the max/min bound.
+    if (mapView.maxDelta > FLT_EPSILON && region.span.longitudeDelta > mapView.maxDelta) {
+        needZoom = YES;
+        newLongitudeDelta = mapView.maxDelta * (1 - MiaopasiRnMapZoomBoundBuffer);
+    } else if (mapView.minDelta > FLT_EPSILON && region.span.longitudeDelta < mapView.minDelta) {
+        needZoom = YES;
+        newLongitudeDelta = mapView.minDelta * (1 + MiaopasiRnMapZoomBoundBuffer);
+    }
+    if (needZoom) {
+        region.span.latitudeDelta = region.span.latitudeDelta / region.span.longitudeDelta * newLongitudeDelta;
+        region.span.longitudeDelta = newLongitudeDelta;
+        mapView.region = region;
+    }
+
+    // Continuously observe region changes
+    [self _emitRegionChangeEvent:mapView continuous:YES];
+}
+
+- (void)_emitRegionChangeEvent:(MiaopasiRnMKMapView *)mapView continuous:(BOOL)continuous
+{
+    if (!mapView.ignoreRegionChanges) {
+        MKCoordinateRegion region = mapView.region;
+        if (!CLLocationCoordinate2DIsValid(region.center)) {
+            return;
+        }
+
+#define FLUSH_NAN(value) (isnan(value) ? 0 : value)
+        NSDictionary *regionInfo = @{
+            @"latitude": @(FLUSH_NAN(region.center.latitude)),
+            @"longitude": @(FLUSH_NAN(region.center.longitude)),
+            @"latitudeDelta": @(FLUSH_NAN(region.span.latitudeDelta)),
+            @"longitudeDelta": @(FLUSH_NAN(region.span.longitudeDelta)),
+        };
+        if(continuous){
+            if(mapView.onRegionChange){
+                mapView.onRegionChange(@{
+                        @"region": regionInfo
+                });
+            }
+        } else {
+            if(mapView.onRegionChangeComplete){
+                mapView.onRegionChangeComplete(@{
+                        @"region": regionInfo
+                });
+            }
+        }
+    }
+}
+
+
+
+
+
+#pragma mark exported MapView methods
+
+RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
+        withRegion:(MKCoordinateRegion)region
+        withDuration:(CGFloat)duration)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[MiaopasiRnMKMapView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting MiaopasiRnMKMapView, got: %@", view);
+        } else {
+            [MiaopasiRnMKMapView animateWithDuration:duration/1000 animations:^{
+                [(MiaopasiRnMKMapView *)view setRegion:region animated:YES];
+            }];
+        }
+    }];
 }
 @end

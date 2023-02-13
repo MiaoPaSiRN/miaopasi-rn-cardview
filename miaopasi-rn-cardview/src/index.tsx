@@ -1,30 +1,7 @@
-import {
-  requireNativeComponent,
-  UIManager,
-  Platform,
-  ViewStyle,
-} from 'react-native';
+import { MiaopasiRnMapView, MiaopasiRnMapViewProps } from './MiaopasiRnMapView';
 
-const LINKING_ERROR =
-  `The package 'miaopasi-rn-cardview' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
+export type { MiaopasiRnMapViewProps };
 
-type MiaopasiRnCardProps = {
-  color?: string;
-  style?: ViewStyle;
-  children?: React.ReactNode;
-  zoomEnabled?: boolean;
-  region?: any;
-  onRegionChange?: (info: any) => void;
-};
+export * from './sharedTypes';
 
-const ComponentName = 'MiaopasiRnCard';
-
-export const MiaopasiRnCard =
-  UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<MiaopasiRnCardProps>(ComponentName)
-    : () => {
-        throw new Error(LINKING_ERROR);
-      };
+export default MiaopasiRnMapView;

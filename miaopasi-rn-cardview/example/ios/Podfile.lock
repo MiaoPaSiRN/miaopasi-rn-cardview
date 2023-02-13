@@ -77,7 +77,7 @@ PODS:
     - hermes-engine/Pre-built (= 0.71.2)
   - hermes-engine/Pre-built (0.71.2)
   - libevent (2.1.12)
-  - miaopasi-rn-cardview (1.0.0):
+  - miaopasi-rn-cardview (1.1.0):
     - React-Core
   - OpenSSL-Universal (1.1.1100)
   - RCT-Folly (2021.07.22.00):
@@ -591,7 +591,7 @@ SPEC CHECKSUMS:
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 6351580c827b3b03e5f25aadcf989f582d0b0a86
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
-  miaopasi-rn-cardview: a7a8b3b966c8d430a8277a1e0b81794ea334f976
+  miaopasi-rn-cardview: 4a81f6041d7a6f957e06636149be82edc4b486f4
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
   RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
   RCTRequired: c154ebcfbf41d6fef86c52674fc1aa08837ff538
