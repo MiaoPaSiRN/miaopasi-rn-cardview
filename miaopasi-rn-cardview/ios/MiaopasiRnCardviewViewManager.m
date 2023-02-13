@@ -87,8 +87,7 @@ RCT_EXPORT_VIEW_PROPERTY(zoomEnabled, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(maxDelta, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(minDelta, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(onMapReady, RCTBubblingEventBlock)
-RCT_EXPORT_VIEW_PROPERTY(onRegionChange, RCTBubblingEventBlock)
-RCT_EXPORT_VIEW_PROPERTY(onRegionChangeComplete, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onChange, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPanDrag, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLongPress, RCTBubblingEventBlock)
@@ -265,32 +264,22 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MiaopasiRnMKMapView)
 
 - (void)_emitRegionChangeEvent:(MiaopasiRnMKMapView *)mapView continuous:(BOOL)continuous
 {
-    if (!mapView.ignoreRegionChanges) {
+    if (!mapView.ignoreRegionChanges && mapView.onChange) {
         MKCoordinateRegion region = mapView.region;
         if (!CLLocationCoordinate2DIsValid(region.center)) {
             return;
         }
 
 #define FLUSH_NAN(value) (isnan(value) ? 0 : value)
-        NSDictionary *regionInfo = @{
-            @"latitude": @(FLUSH_NAN(region.center.latitude)),
-            @"longitude": @(FLUSH_NAN(region.center.longitude)),
-            @"latitudeDelta": @(FLUSH_NAN(region.span.latitudeDelta)),
-            @"longitudeDelta": @(FLUSH_NAN(region.span.longitudeDelta)),
-        };
-        if(continuous){
-            if(mapView.onRegionChange){
-                mapView.onRegionChange(@{
-                        @"region": regionInfo
-                });
-            }
-        } else {
-            if(mapView.onRegionChangeComplete){
-                mapView.onRegionChangeComplete(@{
-                        @"region": regionInfo
-                });
-            }
-        }
+        mapView.onChange(@{
+                @"continuous": @(continuous),
+                @"region": @{
+                        @"latitude": @(FLUSH_NAN(region.center.latitude)),
+                        @"longitude": @(FLUSH_NAN(region.center.longitude)),
+                        @"latitudeDelta": @(FLUSH_NAN(region.span.latitudeDelta)),
+                        @"longitudeDelta": @(FLUSH_NAN(region.span.longitudeDelta)),
+                }
+        });
     }
 }
 

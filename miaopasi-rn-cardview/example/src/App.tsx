@@ -16,9 +16,9 @@ export default function App() {
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   };
-  const onRegionChange = (region: Region) => {
+  const onRegionChangeComplete = (region: Region) => {
     // Do stuff with event.region.latitude, etc.
-    console.log('onRegionChange: ', region);
+    console.log('onRegionChangeComplete: ', region);
   };
 
   return (
@@ -28,7 +28,7 @@ export default function App() {
         style={styles.box}
         initialRegion={initialRegion}
         region={region}
-        onRegionChange={onRegionChange}
+        onRegionChangeComplete={onRegionChangeComplete}
       >
         <Text>地图1</Text>
       </MiaopasiRnMapView>
@@ -36,14 +36,13 @@ export default function App() {
         style={styles.box}
         initialRegion={initialRegion}
         region={region}
-        onRegionChange={onRegionChange}
+        onRegionChange={onRegionChangeComplete}
       >
         <Text>地图2</Text>
       </MiaopasiRnMapView>
       <Button
         title="点击修改地图1"
         onPress={() => {
-          // this.myNativeReference.callNativeMethod();
           mapRef?.animateToRegion(
             {
               latitude: 37.48,
@@ -68,5 +67,6 @@ const styles = StyleSheet.create({
   box: {
     width: '100%',
     height: 200,
+    marginBottom: 20,
   },
 });

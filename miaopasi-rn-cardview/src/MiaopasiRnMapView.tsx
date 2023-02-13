@@ -4,10 +4,9 @@ import {
   NativeSyntheticEvent,
   requireNativeComponent,
   UIManager,
-  View,
   ViewProps,
+  findNodeHandle,
 } from 'react-native';
-import { Commands } from './MapViewNativeComponent';
 
 import type {
   ChangeEvent,
@@ -31,76 +30,72 @@ export type MiaopasiRnMapViewProps = ViewProps & {
   onLongPress?: (event: LongPressEvent) => void;
 };
 
-// type NativeProps = MiaopasiRnMapViewProps & { ref: React.RefObject<View> };
-
-// export type NativeProps = Omit<
-//   MiaopasiRnMapViewProps,
-//   'onRegionChange' | 'onRegionChangeComplete'
-// > & {
-//   handlePanDrag?: boolean;
-//   onChange?: (e: ChangeEvent) => void;
-// };
-
-// type State = {
-//   isReady: boolean;
-// };
+/*
+omit函数的作用:将第一个参数中包含第二个参数的全部去掉，即只保留第一个参数中不包含第二个
+参数的其他数据;
+这里我们将 'onRegionChange' 和 'onRegionChangeComplete' 函数去掉，注意，这里的去掉指的是
+不向 MiaopasiRnCard 组件传递这两个值，而 MiaopasiRnMapView 组件的props中仍含有这两个入参。
+这样做是因为，MiaopasiRnCard 组件由原生传给JS的参数比较繁杂，我们这里处理一下，只拿我们需要的参数
+*/
+export type NativeProps = Omit<
+  MiaopasiRnMapViewProps,
+  'onRegionChange' | 'onRegionChangeComplete'
+> & {
+  onChange?: (e: ChangeEvent) => void;
+};
 
 const MiaopasiRnCard =
   requireNativeComponent<MiaopasiRnMapViewProps>('MiaopasiRnCard');
 
 export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
-  //   scrollableTabRef = React.createRef<LegacyRef<View> | undefined>();
-  private circle: React.RefObject<View>;
+  viewRef?: React.ElementRef<typeof MiaopasiRnCard>;
 
   constructor(props: MiaopasiRnMapViewProps) {
     super(props);
-    this.circle = React.createRef<View>();
-
-    // this.state = {
-    //   isReady: Platform.OS === 'ios',
-    // };
-
-    // this._onMapReady = this._onMapReady.bind(this);
-    // this._onChange = this._onChange.bind(this);
-  }
-
-  /**
-   * @deprecated Will be removed in v2.0.0, as setNativeProps is not a thing in fabric.
-   * See https://reactnative.dev/docs/new-architecture-library-intro#migrating-off-setnativeprops
-   */
-  setNativeProps(props: Partial<MiaopasiRnMapViewProps>) {
-    console.warn(
-      'setNativeProps is deprecated and will be removed in next major release'
-    );
-    // this.circle.setNativeProps(props);
   }
 
   animateToRegion(region: Region, duration: number = 500) {
-    console.log('animateToRegion:', region);
-    console.log('animateToRegion:', this.circle);
-
-    // if (this.circle) {
-    //   Commands.animateToRegion(this.circle.current, region, duration);
-    // }
-    // UIManager.dispatchViewManagerCommand(this.circle.current, 'animateToRegion', [region]);
-    // UIManager.dispatchViewManagerCommand(
-    //   null,
-    //   UIManager.getViewManagerConfig('MiaopasiRnCard').Commands
-    //     .callNativeMethod,
-    //   []
-    // );
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this),
+      UIManager.getViewManagerConfig('MiaopasiRnCard').Commands
+        .animateToRegion!,
+      [region, duration]
+    );
   }
 
-  //   callNativeMethod = () => {
-  //     UIManager.dispatchViewManagerCommand(
-  //       ReactNative.findNodeHandle(this),
-  //       UIManager.getViewManagerConfig('RNCMyNativeView').Commands
-  //         .callNativeMethod,
-  //       []
-  //     );
-  //   };
+  private _onMapReady = () => {
+    if (this.props.onMapReady) {
+      this.props.onMapReady();
+    }
+  };
+
+  private _onChange = ({ nativeEvent }: ChangeEvent) => {
+    if (nativeEvent.continuous) {
+      if (this.props.onRegionChange) {
+        this.props.onRegionChange(nativeEvent.region);
+      }
+    } else if (this.props.onRegionChangeComplete) {
+      this.props.onRegionChangeComplete(nativeEvent.region);
+    }
+  };
 
   render() {
-    return <MiaopasiRnCard ref={this.circle} {...this.props}></MiaopasiRnCard>;
+    let props: NativeProps;
+    props = {
+      region: null,
+      initialRegion: null,
+      onChange: this._onChange,
+      onMapReady: this._onMapReady,
+      ...this.props,
+    };
+
+    return (
+      <MiaopasiRnCard
+        ref={(ref: React.ElementRef<typeof MiaopasiRnCard>) =>
+          (this.viewRef = ref)
+        }
+        {...props}
+      ></MiaopasiRnCard>
+    );
   }
 }

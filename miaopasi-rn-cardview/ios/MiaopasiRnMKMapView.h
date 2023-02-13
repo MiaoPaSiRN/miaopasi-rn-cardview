@@ -23,8 +23,7 @@ extern const NSInteger MiaopasiRnMapMaxZoomLevel;
 
 @property (nonatomic, assign) BOOL ignoreRegionChanges;
 @property (nonatomic, copy) RCTBubblingEventBlock onMapReady;
-@property (nonatomic, copy) RCTBubblingEventBlock onRegionChange;
-@property (nonatomic, copy) RCTBubblingEventBlock onRegionChangeComplete;
+@property (nonatomic, copy) RCTBubblingEventBlock onChange;
 @property (nonatomic, copy) RCTBubblingEventBlock onPress;
 @property (nonatomic, copy) RCTBubblingEventBlock onPanDrag;
 @property (nonatomic, copy) RCTBubblingEventBlock onDoublePress;
