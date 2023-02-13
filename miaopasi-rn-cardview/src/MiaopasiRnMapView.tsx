@@ -1,14 +1,14 @@
 import React from 'react';
+
 import {
-  NativeMethods,
   NativeSyntheticEvent,
-  Platform,
+  requireNativeComponent,
   UIManager,
+  View,
+  ViewProps,
 } from 'react-native';
-import { View } from 'react-native';
-import { findNodeHandle } from 'react-native';
-import { requireNativeComponent, ViewProps } from 'react-native';
 import { Commands } from './MapViewNativeComponent';
+
 import type {
   ChangeEvent,
   ClickEvent,
@@ -31,6 +31,8 @@ export type MiaopasiRnMapViewProps = ViewProps & {
   onLongPress?: (event: LongPressEvent) => void;
 };
 
+// type NativeProps = MiaopasiRnMapViewProps & { ref: React.RefObject<View> };
+
 // export type NativeProps = Omit<
 //   MiaopasiRnMapViewProps,
 //   'onRegionChange' | 'onRegionChangeComplete'
@@ -39,24 +41,24 @@ export type MiaopasiRnMapViewProps = ViewProps & {
 //   onChange?: (e: ChangeEvent) => void;
 // };
 
-type State = {
-  isReady: boolean;
-};
+// type State = {
+//   isReady: boolean;
+// };
 
 const MiaopasiRnCard =
   requireNativeComponent<MiaopasiRnMapViewProps>('MiaopasiRnCard');
 
-export class MiaopasiRnMapView extends React.Component<
-  MiaopasiRnMapViewProps,
-  State
-> {
+export class MiaopasiRnMapView extends React.Component<MiaopasiRnMapViewProps> {
   //   scrollableTabRef = React.createRef<LegacyRef<View> | undefined>();
+  private circle: React.RefObject<View>;
 
   constructor(props: MiaopasiRnMapViewProps) {
     super(props);
-    this.state = {
-      isReady: Platform.OS === 'ios',
-    };
+    this.circle = React.createRef<View>();
+
+    // this.state = {
+    //   isReady: Platform.OS === 'ios',
+    // };
 
     // this._onMapReady = this._onMapReady.bind(this);
     // this._onChange = this._onChange.bind(this);
@@ -70,30 +72,17 @@ export class MiaopasiRnMapView extends React.Component<
     console.warn(
       'setNativeProps is deprecated and will be removed in next major release'
     );
-    // this.mapRef?.setNativeProps(props);
-  }
-
-  private _onMapReady() {
-    if (this.props.onMapReady) {
-      this.props.onMapReady();
-    }
-  }
-
-  private _onChange({ nativeEvent }: ChangeEvent) {
-    if (nativeEvent.continuous) {
-      if (this.props.onRegionChange) {
-        this.props.onRegionChange(nativeEvent.region);
-      }
-    } else if (this.props.onRegionChangeComplete) {
-      this.props.onRegionChangeComplete(nativeEvent.region);
-    }
+    // this.circle.setNativeProps(props);
   }
 
   animateToRegion(region: Region, duration: number = 500) {
-    // if (this.mapRef) {
-    //   Commands.animateToRegion(this.mapRef.current, region, duration);
+    console.log('animateToRegion:', region);
+    console.log('animateToRegion:', this.circle);
+
+    // if (this.circle) {
+    //   Commands.animateToRegion(this.circle.current, region, duration);
     // }
-    // UIManager.dispatchViewManagerCommand(null, 'animateToRegion', [region]);
+    // UIManager.dispatchViewManagerCommand(this.circle.current, 'animateToRegion', [region]);
     // UIManager.dispatchViewManagerCommand(
     //   null,
     //   UIManager.getViewManagerConfig('MiaopasiRnCard').Commands
@@ -112,18 +101,6 @@ export class MiaopasiRnMapView extends React.Component<
   //   };
 
   render() {
-    return (
-      //   <View ref={this.scrollableTabRef}></View>
-      <MiaopasiRnCard
-        //   ref={this.scrollableTabRef}
-        // onMapReady={this.props.onMapReady}
-        // onRegionChange={(region: Region) => {
-        //   if (this.props.onRegionChange) {
-        //     this.props.onRegionChange(region);
-        //   }
-        // }}
-        {...this.props}
-      ></MiaopasiRnCard>
-    );
+    return <MiaopasiRnCard ref={this.circle} {...this.props}></MiaopasiRnCard>;
   }
 }
