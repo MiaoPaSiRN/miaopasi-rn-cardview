@@ -20,12 +20,6 @@ import type {
 
 const ComponentName = 'MiaopasiRnCard';
 
-const LINKING_ERROR =
-  `The package 'miaopasi-rn-cardview' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
-
 export type MiaopasiRnMapViewProps = ViewProps & {
   initialRegion?: Region | undefined | null;
   region?: Region | undefined | null;
