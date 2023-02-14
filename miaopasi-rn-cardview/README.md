@@ -11,11 +11,11 @@ npm install miaopasi-rn-cardview
 ## Usage
 
 ```js
-import { MiaopasiRnCard } from 'miaopasi-rn-cardview';
+import { MiaopasiRnMapView } from 'miaopasi-rn-cardview';
 
 // ...
 
-<MiaopasiRnCard color="tomato" />;
+<MiaopasiRnMapView />;
 ```
 
 ## Contributing

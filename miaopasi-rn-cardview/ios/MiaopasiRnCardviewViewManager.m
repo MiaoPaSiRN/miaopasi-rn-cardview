@@ -119,8 +119,6 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MiaopasiRnMKMapView)
 
     CGPoint tapPoint = [recognizer locationInView:map];
     CLLocationCoordinate2D tapCoordinate = [map convertPoint:tapPoint toCoordinateFromView:map];
-    MKMapPoint mapPoint = MKMapPointForCoordinate(tapCoordinate);
-    CGPoint mapPointAsCGP = CGPointMake(mapPoint.x, mapPoint.y);
 
     if (!map.onPress) return;
     map.onPress(@{
