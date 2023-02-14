@@ -6,7 +6,6 @@ import {
   UIManager,
   ViewProps,
   findNodeHandle,
-  Platform,
 } from 'react-native';
 
 import type {
